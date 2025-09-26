@@ -22,9 +22,10 @@ class SqlAnalyzer(private val connection: Connection) {
 
         val parameterMetaData = preparedStatement.parameterMetaData
         val params = (1..parameterMetaData.parameterCount).map {
+            val dbType = parameterMetaData.getParameterTypeName(it)
             ParamModel(
                 paramNames[it - 1].substring(1),
-                parameterMetaData.getParameterTypeName(it), // db type
+                dbType,
                 parameterMetaData.isNullable(it) != ParameterMetaData.parameterNoNulls
             )
         }
@@ -33,7 +34,7 @@ class SqlAnalyzer(private val connection: Connection) {
         val columns = if (resultSetMetaData != null) { // it is a query
 
             (1..resultSetMetaData.columnCount).map {
-                val isNullable = (resultSetMetaData.isNullable(it) != ResultSetMetaData.columnNoNulls)
+                val isNullable = resultSetMetaData.isNullable(it) != ResultSetMetaData.columnNoNulls
                 ColumnModel(
                     toCamelCase(resultSetMetaData.getColumnName(it)),
                     resultSetMetaData.getColumnTypeName(it),
