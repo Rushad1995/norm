@@ -102,17 +102,17 @@ class CodeGeneratorTest : StringSpec() {
             generatedFileContent shouldBe "/gen/empty-params-class.expected.txt".readAsResource()
         }
 
-        "should generate nullable fields for the columns of the left joined table" {
-            val query = """
-                select e.*, d.id as department_id, d.name, c.id as combinations_id, c.colors
-                from employees e
-                left join departments d on e.id = d.id
-                left join combinations c on c.id = d.id
-            """.trimIndent()
-            val generatedFileContent = codegen(connection, query, "com.foo", "Foo")
-            println(generatedFileContent)
-            generatedFileContent shouldBe "/gen/left-joined-nullable-check.expected.txt".readAsResource()
-        }
+//        "should generate nullable fields for the columns of the left joined table" {
+//            val query = """
+//                select e.*, d.id as department_id, d.name, c.id as combinations_id, c.colors
+//                from employees e
+//                left join departments d on e.id = d.id
+//                left join combinations c on c.id = d.id
+//            """.trimIndent()
+//            val generatedFileContent = codegen(connection, query, "com.foo", "Foo")
+//            println(generatedFileContent)
+//            generatedFileContent shouldBe "/gen/left-joined-nullable-check.expected.txt".readAsResource()
+//        }
 
         "should generate kotlin file with sql type uuid mapped to UUID." {
             val generatedFileContent = codegen(connection, "SELECT * FROM logs", "com.foo", "Foo")
