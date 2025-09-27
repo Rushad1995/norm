@@ -13,6 +13,7 @@ import java.sql.ResultSetMetaData
  */
 class SqlAnalyzer(private val connection: Connection) {
     private val namedParamsRegex = "(?<!:)(:\\w+)".toRegex() // TODO extract
+    private val leftJoinRegex = "(?i)(?:LEFT\\s+JOIN\\s+)(?<tables>\\b\\S+\\b)".toRegex()
 
     fun sqlModel(namedParamSql: String): SqlModel {
 
@@ -31,9 +32,11 @@ class SqlAnalyzer(private val connection: Connection) {
 
         val resultSetMetaData: ResultSetMetaData? = preparedStatement.metaData
         val columns = if (resultSetMetaData != null) { // it is a query
+        val leftJoinedTables = leftJoinRegex.findAll(namedParamSql).map { it.groups[1]?.value }.toList()
 
             (1..resultSetMetaData.columnCount).map {
-                val isNullable = resultSetMetaData.isNullable(it) != ResultSetMetaData.columnNoNulls
+                val isNullable = leftJoinedTables.contains(resultSetMetaData.getTableName(it)) ||
+                    (resultSetMetaData.isNullable(it) != ResultSetMetaData.columnNoNulls)
                 ColumnModel(
                     toCamelCase(resultSetMetaData.getColumnName(it)),
                     resultSetMetaData.getColumnTypeName(it),
