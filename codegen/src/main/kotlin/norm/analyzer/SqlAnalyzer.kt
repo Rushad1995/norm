@@ -22,10 +22,9 @@ class SqlAnalyzer(private val connection: Connection) {
 
         val parameterMetaData = preparedStatement.parameterMetaData
         val params = (1..parameterMetaData.parameterCount).map {
-            val dbType = parameterMetaData.getParameterTypeName(it)
             ParamModel(
                 paramNames[it - 1].substring(1),
-                dbType,
+                parameterMetaData.getParameterTypeName(it), // db type
                 parameterMetaData.isNullable(it) != ParameterMetaData.parameterNoNulls
             )
         }
