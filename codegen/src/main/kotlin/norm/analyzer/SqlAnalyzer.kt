@@ -34,17 +34,25 @@ class SqlAnalyzer(private val connection: Connection) {
         val columns = if (resultSetMetaData != null) { // it is a query
         val leftJoinedTables = leftJoinRegex.findAll(namedParamSql).map { it.groups[1]?.value }.toList()
 
-            (1..resultSetMetaData.columnCount).map {
-                val isNullable = if (leftJoinedTables.contains(resultSetMetaData.getTableName(it))) {
-                    false
-                } else {
-                    resultSetMetaData.isNullable(it) != ResultSetMetaData.columnNoNulls
+            (1..resultSetMetaData.columnCount).map { idx ->
+                val tableName = resultSetMetaData.getTableName(idx)
+                val colName = resultSetMetaData.getColumnName(idx)
+                val baseNullable = resultSetMetaData.isNullable(idx) != ResultSetMetaData.columnNoNulls
+                val colPattern = Regex("(?i)COALESCE\\s*\\(\\s*.*${colName}.*?,\\s*null\\s*\\)")
+                val wrappedInCoalesce = colPattern.containsMatchIn(namedParamSql)
+
+                val isNullable = when {
+                    wrappedInCoalesce -> true
+
+                    leftJoinedTables.contains(tableName) -> true
+
+                    else -> baseNullable
                 }
 
                 ColumnModel(
-                    toCamelCase(resultSetMetaData.getColumnName(it)),
-                    resultSetMetaData.getColumnTypeName(it),
-                    resultSetMetaData.getColumnName(it),
+                    toCamelCase(colName),
+                    resultSetMetaData.getColumnTypeName(idx),
+                    colName,
                     isNullable
                 )
             }
